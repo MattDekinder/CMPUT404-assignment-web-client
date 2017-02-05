@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
-# Copyright 2016 Abram Hindle, https://github.com/tywtyw2002, and https://github.com/treedust
+# Copyright 2016 Abram Hindle https://github.com/tywtyw2002, and https://github.com/treedust
+#
+# Modified by Matthew Dekinder
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -98,6 +100,37 @@ class HTTPClient(object):
     def POST(self, url, args=None):
         code = 500
         body = ""
+        parsedurl = urlparse.urlparse(url)
+        #print parsedurl, '-------------________________-____________-----'
+        host = parsedurl.netloc
+        path = parsedurl.path
+        #"http://%s:%d/%s" % (BASEHOST,BASEPORT, path)
+        if ':' in host:
+            host, port = host.split(':')
+            port = int(port)
+        else:
+            port = 80
+
+        urlArgs = '' #len('') = 0, so this works for no body
+        if args is not None:
+            urlArgs = urllib.urlencode(args)
+        #print '****--------*****--',args, urllib.urlencode(args)
+
+        req = 'POST '+ path +' HTTP/1.1\r\n'
+        req += 'Host:' + host + '\r\n'
+        req += 'Content-Length: '+str(len(urlArgs))+'\r\n'
+        req += 'Accept: */*\r\nUser-Agent: MattClient\r\nConnection: Close\r\n\r\n'
+
+        if args is not None:
+            req+= urlArgs
+
+        socket = self.connect(host, port);
+
+        socket.sendall(req)
+        res = self.recvall(socket)
+        #print '____-_____------____---', res, '------______________-----------------------'
+        code = int(res.split(' ')[1])
+        body = res.split('\r\n\r\n')[1]
         return HTTPResponse(code, body)
 
     def command(self, url, command="GET", args=None):
