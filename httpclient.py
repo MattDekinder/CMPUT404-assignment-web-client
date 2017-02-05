@@ -22,7 +22,7 @@ import sys
 import socket
 import re
 # you may use urllib to encode data appropriately
-import urllib
+import urllib, urlparse
 
 def help():
     print "httpclient.py [GET/POST] [URL]\n"
@@ -35,9 +35,12 @@ class HTTPResponse(object):
 class HTTPClient(object):
     #def get_host_port(self,url):
 
-    def connect(self, host, port):
-        # use sockets!
-        return None
+    def connect(self, host, port=80):
+        #adapted from https://github.com/joshua2ua/cmput404w17lab2 by Joshua Campbell
+        clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        clientSocket.connect((host, port)) #clientSocket.connect(("www.google.com", 80))
+
+        return clientSocket
 
     def get_code(self, data):
         return None
@@ -63,6 +66,33 @@ class HTTPClient(object):
     def GET(self, url, args=None):
         code = 500
         body = ""
+        parsedurl = urlparse.urlparse(url)
+        #print parsedurl, '-------------________________-____________-----'
+        host = parsedurl.netloc
+        path = parsedurl.path
+        #"http://%s:%d/%s" % (BASEHOST,BASEPORT, path)
+        if ':' in host:
+            host, port = host.split(':')
+            port = int(port)
+        else:
+            port = 80
+
+        #print host, path, url, port
+
+        req = 'GET '+ path +' HTTP/1.1\r\n'
+        req += 'Host:' + host + '\r\n'
+        req += 'Accept: */*\r\nUser-Agent: MattClient\r\nConnection: Close\r\n\r\n'
+
+        socket = self.connect(host, port);
+
+        socket.sendall(req)
+        res = self.recvall(socket)
+        #print res, '---------------------------------------'
+        code = int(res.split(' ')[1])
+        body = res.split('\r\n\r\n')[1]
+
+        #print 'Code: ', code, ' Body: ', body
+
         return HTTPResponse(code, body)
 
     def POST(self, url, args=None):
