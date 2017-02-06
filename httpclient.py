@@ -94,6 +94,7 @@ class HTTPClient(object):
         body = res.split('\r\n\r\n')[1]
 
         #print 'Code: ', code, ' Body: ', body
+        print res #this is what the user will see in stdout: resp line, headers and the body of the response 
 
         return HTTPResponse(code, body)
 
@@ -119,8 +120,8 @@ class HTTPClient(object):
         req = 'POST '+ path +' HTTP/1.1\r\n'
         req += 'Host:' + host + '\r\n'
         req += 'Content-Length: '+str(len(urlArgs))+'\r\n'
+        req += 'Content-Type: application/x-www-form-urlencoded\r\n'
         req += 'Accept: */*\r\nUser-Agent: MattClient\r\nConnection: Close\r\n\r\n'
-
         if args is not None:
             req+= urlArgs
 
@@ -131,6 +132,9 @@ class HTTPClient(object):
         #print '____-_____------____---', res, '------______________-----------------------'
         code = int(res.split(' ')[1])
         body = res.split('\r\n\r\n')[1]
+
+        print res #this is what the user will see in stdout
+
         return HTTPResponse(code, body)
 
     def command(self, url, command="GET", args=None):
